@@ -77,6 +77,7 @@ typedef void *__builtin_va_list;
 #define pgm_read_float(address_short) float()
 #define pgm_read_ptr(address_short)   short()
 
-#include "WriteUID.ino"
+#include "RFID-RC522.ino"
+#include "ReaderSingle.ino"
 #endif
 #endif
