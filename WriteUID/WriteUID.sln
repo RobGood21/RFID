@@ -16,6 +16,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RFIDaccess", "..\RFIDaccess\RFIDaccess\RFIDaccess.vcxproj", "{F07D59BF-02EA-4319-82C9-9CE0BA319312}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ReaderSerial", "ReaderSerial\ReaderSerial.vcxproj", "{DDFC544A-5AEA-4D81-8DAE-F46242EFD891}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -38,6 +40,10 @@ Global
 		{F07D59BF-02EA-4319-82C9-9CE0BA319312}.Debug|x86.Build.0 = Debug|Win32
 		{F07D59BF-02EA-4319-82C9-9CE0BA319312}.Release|x86.ActiveCfg = Release|Win32
 		{F07D59BF-02EA-4319-82C9-9CE0BA319312}.Release|x86.Build.0 = Release|Win32
+		{DDFC544A-5AEA-4D81-8DAE-F46242EFD891}.Debug|x86.ActiveCfg = Debug|Win32
+		{DDFC544A-5AEA-4D81-8DAE-F46242EFD891}.Debug|x86.Build.0 = Debug|Win32
+		{DDFC544A-5AEA-4D81-8DAE-F46242EFD891}.Release|x86.ActiveCfg = Release|Win32
+		{DDFC544A-5AEA-4D81-8DAE-F46242EFD891}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

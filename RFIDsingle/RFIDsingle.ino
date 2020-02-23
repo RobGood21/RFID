@@ -4,11 +4,7 @@
  Author:	Rob Antonisse
 
  Card reader voor 1 enkele reader, leest alleen het UID
-
-
-
-
-*/
+ */
 
 #include <SPI.h>
 #include <MFRC522.h>
@@ -37,6 +33,7 @@ void loop() {
 		}
 		Serial.println("");
 
+		reader.PICC_DumpToSerial();
 		
 
 		reader.PICC_HaltA();// Halt PICC			
