@@ -39,6 +39,8 @@ void setup() {
 	DDRD |= (1 << 6); //pin6 as output
 	DDRD |= (1 << 5); //pin5 as output
 	PORTD |= (3 << 5); //outputs high, low active for relaismodules
+
+
 	reader.PCD_Init(sspin, RST_PIN); // Init each MFRC522 card
 	Serial.print(F("Reader "));
 	Serial.print(F(": "));
