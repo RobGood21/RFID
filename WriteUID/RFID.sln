@@ -20,7 +20,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ReaderSerial", "ReaderSeria
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Dices", "..\Dices\Dices.vcxproj", "{B1F2DAD2-285B-47E2-B219-646EF3F28DF2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FastLED-master-3.1.6", "Libraries\FastLED-master\3.1.6\FastLED-master\FastLED-master-3.1.6.vcxitems", "{FA0536D9-34FA-4A2B-9D99-1D081BF5360D}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Libraries\FastLED-master\3.1.6\FastLED-master\FastLED-master-3.1.6.vcxitems*{b1f2dad2-285b-47e2-b219-646ef3f28df2}*SharedItemsImports = 4
+		Libraries\FastLED-master\3.1.6\FastLED-master\FastLED-master-3.1.6.vcxitems*{fa0536d9-34fa-4a2b-9d99-1d081bf5360d}*SharedItemsImports = 9
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
 		Release|x86 = Release|x86
