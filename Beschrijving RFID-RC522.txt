@@ -21,3 +21,16 @@ bit1 toegang
 DICES
 register booleans GPIOR0
 bit0 program mode on (true)
+bit1 Fastled show (true)
+
+GPIOR1 gebruiken om dubbel uitmeting te krijgen voordat een kleur uitgaat
+
+EEPROM
+100 id reader 1 color
+101 id reader 2 color
+102 id reader 3 color
+103 id reader 4 color	
+104 id 1 position
+105 id 2 position
+106 id 3 position
+107 id 4 position
