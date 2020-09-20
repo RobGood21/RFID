@@ -124,7 +124,7 @@
   </ImportGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties arduino.upload.port="COM4" config.Debug.customdebug_ethernet_debugger_type="none" />
+      <UserProperties arduino.upload.port="COM5" config.Debug.customdebug_ethernet_debugger_type="none" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

@@ -18,17 +18,20 @@
 #include <FastLED.h>
 #define fl GPIOR0 |=(1<<1); //request fastled show
 MFRC522 reader;   // Create MFRC522 instance.
-CRGB pix[30]; //aantal pixels WS2812B
+CRGB pix[64]; //aantal pixels WS2812B
+
 unsigned long tijd;
 byte code[10];
 byte cardcount;
 byte solved; // als 0x0F puzzel opgelost....bit0=reader 1 enz
 byte countll;
 byte stopcount[4];
+
+
 void setup() {
 	Serial.begin(9600);
 	SPI.begin(); // Init SPI bus
-	FastLED.addLeds<NEOPIXEL, 7>(pix, 30);
+	FastLED.addLeds<NEOPIXEL, 7>(pix, 64);
 	//portC as output
 	DDRC |= (15 << 0);
 	DDRB |= (1 << 0); //PIN8 output temp led
@@ -36,7 +39,8 @@ void setup() {
 	PORTD |= (1 << 6); //pull up to PIN6
 	DDRD |= (1 << 5); //PIN5, relais als output
 	PORTD |= (1 << 5); //Relais low active
-	fill_solid(pix, 30, CRGB(5, 0, 0));
+	fill_solid(pix, 64, CRGB(5, 0, 0));
+	FastLED.setBrightness(100);
 	FastLED.show();
 }
 
@@ -48,14 +52,14 @@ void RFID_read() {
 	if (~PIND & (1 << 6)) {
 		//enter program mode
 		if (~GPIOR0 & (1 << 0)) {
-			fill_solid(pix, 30, CRGB(20, 20, 20));
+			fill_solid(pix, 64, CRGB(20, 20, 20));
 			GPIOR0 |= (1 << 0); //program mode on
 			fl;
 		}
 	}
 	else {
 		if (GPIOR0 & (1 << 0)) {
-			fill_solid(pix, 30, CRGB::Black);
+			fill_solid(pix, 64, CRGB::Black);
 			GPIOR0 &= ~(1 << 0); //program mode off
 			fl;
 		}
@@ -127,6 +131,7 @@ void RFID_read() {
 	}
 }
 void setcolor(byte pos, byte color) {
+	byte start[4];
 	byte rd; byte gr; byte bl;
 	switch (color) {
 	case 0: //groen
@@ -145,8 +150,39 @@ void setcolor(byte pos, byte color) {
 		rd = 0x00; gr = 0x00; bl = 0x00;
 		break;
 	}
-	for (byte i = (pos * 7); i < (pos + 1) * 7; i++) {
-		pix[i].r = rd; pix[i].g = gr; pix[i].b = bl;
+
+	switch (pos) {
+	case 0:
+		start[0] = 12;
+		start[1] = 16;
+		start[2] = 20;
+		start[3] = 60;
+
+		break;
+	case 1:
+		start[0] = 8;
+		start[1] = 56;
+		start[2] = 24;
+		start[3] = 52;
+		break;
+	case 2:
+		start[0] = 4;
+		start[1] = 48;
+		start[2] = 28;
+		start[3] = 44;
+		break;
+	case 3:
+		start[0] = 0;
+		start[1] = 40;
+		start[2] = 32;
+		start[3] = 36;
+		break;
+	}
+	for (byte i = 0; i < 4; i++) { //3x start
+		for (byte p = (0+start[i]); p < (4+start[i]); p++) {
+			pix[p].r = rd; pix[p].g = gr; pix[p].b = bl;
+		}
+		
 	}
 	fl;
 }
