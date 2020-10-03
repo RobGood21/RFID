@@ -3,10 +3,15 @@
  Created:	september 2020 9:53:29 PM
  Author:	Rob Antonisse
 
- Sketch for escape room puzzle "Dices"
- 4 RFID-RC522 readers controlled by 1 Arduino uno.
- Multiplexing done by pulling only one of the RST lines to VCC others hold to GND.
- Further use seperate 3.3V supply supply of arduino is not sufficient
+Sketch to be used with universal shield for arduino uno. "RFIDmulti"
+Reads 4 RFID-RC522 card readers
+4 extra ouputs for results bits 0~3 of shiftregister
+4 ports voor switches and controls
+Pins:
+P1-free; P2-free;P3-free;P4-free; P5-Serial data shift;P6 Shift register clock; P7 shift register latch
+p8-free; p9-reserved for SPI; p10 SPI SDA;p11 SPI MOSI; p12 SPI MISO; p13 SPI CLK.
+PA0- switch 1;PA1- switch 2;PA2- switch 3;PA3- switch 4;PA4-free;PA5-free
+RST for readers comes from bit7~4 of shift register
 
 */
 #include <require_cpp11.h>
@@ -15,181 +20,123 @@
 #include <deprecated.h>
 #include <EEPROM.h>
 #include <SPI.h>
-#include <FastLED.h>
-#define fl GPIOR0 |=(1<<1); //request fastled show
 MFRC522 reader;   // Create MFRC522 instance.
-CRGB pix[64]; //aantal pixels WS2812B
+//in te stellen constanten
+byte aantalreaders = 4; //aantal readers, max 4 altijd aaneengesloten 1,2,3 enz (dus niet op plek 3 en 4 alleen)
+byte stoptijd = 2;// readers missen af en toe een leesactie, aantal keren dat de reader niks leest voor stop
+
 
 unsigned long tijd;
-byte code[10];
-byte cardcount;
-byte solved; // als 0x0F puzzel opgelost....bit0=reader 1 enz
-byte countll;
-byte stopcount[4];
-
+byte RFM_slowcount;
+byte RFM_cardcount;
+int RFM_carduid[4];
+byte RFM_stopcount[4];
+byte RFM_shiftbyte;
+byte RFM_switchstatus;
 
 void setup() {
 	Serial.begin(9600);
 	SPI.begin(); // Init SPI bus
-	FastLED.addLeds<NEOPIXEL, 7>(pix, 64);
-	//portC as output
-	DDRC |= (15 << 0);
-	DDRB |= (1 << 0); //PIN8 output temp led
-	DDRD &= ~(1 << 6); //pin6 input
-	PORTD |= (1 << 6); //pull up to PIN6
-	DDRD |= (1 << 5); //PIN5, relais als output
-	PORTD |= (1 << 5); //Relais low active
-	fill_solid(pix, 64, CRGB(5, 0, 0));
-	FastLED.setBrightness(100);
-	FastLED.show();
+	//portC as input voor 4 switches
+	PORTC |= (15 << 0);// pullups 
+	DDRD |= (B11100000 << 0); //pin7 RCLK; Pin6 SRCLK; Pin5 Serial pins as output
+	RFM_switchstatus = 0xFF;
 }
 
-void RFID_read() {
-	byte id = 0x00;
-	PORTB &= ~(1 << 0);
+void RFM_read() {
+	unsigned int uid = 0; byte id = 0;
+	RFM_cardcount++;
+	if (RFM_cardcount > aantalreaders - 1) RFM_cardcount = 0;
+	//PORTC &= ~(15 << 0);
+	//PORTC |= (1 << RFM_cardcount);
+	RFM_shiftbyte &= ~(B11110000);
+	RFM_shiftbyte |= (1 << 7 - RFM_cardcount);
 
-	//check for program request
-	if (~PIND & (1 << 6)) {
-		//enter program mode
-		if (~GPIOR0 & (1 << 0)) {
-			fill_solid(pix, 64, CRGB(20, 20, 20));
-			GPIOR0 |= (1 << 0); //program mode on
-			fl;
-		}
-	}
-	else {
-		if (GPIOR0 & (1 << 0)) {
-			fill_solid(pix, 64, CRGB::Black);
-			GPIOR0 &= ~(1 << 0); //program mode off
-			fl;
-		}
-	}
-	cardcount++;
-	if (cardcount > 3) cardcount = 0;
-	PORTC &= ~(15 << 0);
-	PORTC |= (1 << cardcount);
+	RFM_shift(); //p15=bit7 ,p1=bit6,p2=bit5,p3=bit4,
+
 	reader.PCD_Init(10, 9); // Init each MFRC522 card (10 slave select, 9 reset wordt niet gebruikt)
 	if (reader.PICC_IsNewCardPresent() && reader.PICC_ReadCardSerial()) {
-		PORTB |= (1 << 0); //light test led
-		for (byte i = 0; i < reader.uid.size; i++) {
+		//PORTB |= (1 << 0); //light test led
+		for (byte i = 0; i < 4; i++) {
+			uid = uid + reader.uid.uidByte[i];
 			id = id ^ reader.uid.uidByte[i];
 		}
-		if (GPIOR0 & (1 << 0)) { //programmode
-			if (EEPROM.read(100 + cardcount) != id) {
-				EEPROM.update(100 + cardcount, id); //position
-				EEPROM.update(104 + cardcount, id); //memory color
-				setcolor(cardcount, cardcount);
-				//wissen duplicaten, nog niet helemaal goed, kleuren moeten nog uit bij verplaatsen dice
-				for (byte i = 0; i < 4; i++) {
-					if (i != cardcount) {
-						if (EEPROM.read(100 + i) == id) EEPROM.write(100 + i, 0xFF); //clear positions
-						if (EEPROM.read(104 + i) == id) EEPROM.write(104 + i, 0xFF); //clear colors
-					}
-				}
-			}
+		uid = uid + id;
+		if (RFM_carduid[RFM_cardcount] != uid) {
+			RFM_carduid[RFM_cardcount] = uid;
+			RFM_on(uid, RFM_cardcount);
 		}
-		else { //in bedrijf, alleen lezen
-			//check kleur, dobbelsteen
-			for (byte i = 0; i < 4; i++) {
-				if (EEPROM.read(104 + i) == id) {
-					//kleur gevonden
-					setcolor(cardcount, i);
-					if (EEPROM.read(100 + cardcount) == id) {
-						//positie en kleur ok
-						solved |= (1 << cardcount);
-					}
-				}
-			}
-		}
-		stopcount[cardcount] = 0;
+		RFM_stopcount[RFM_cardcount] = 0;
 	}
 	else { //geen card aanwezig...meerdere stopperiodes periodes nodig
-		if (stopcount[cardcount] > 2) { //4x een niet-card-aanwezig voordat uitgaat
-			solved &= ~(1 << cardcount);
-			setcolor(cardcount, 4);
-			stopcount[cardcount] = 0;
+		RFM_stopcount[RFM_cardcount]++;
+		if (RFM_stopcount[RFM_cardcount] > stoptijd)RFM_free(RFM_cardcount);
+	}
+}
+void RFM_on(int uid, byte reader) {
+	RFM_Output(reader, true);
+	Serial.print("Reader: "); Serial.print(reader); Serial.print(", UID= "); Serial.println(uid);
+}
+void RFM_free(byte reader) {
+	if (RFM_carduid[reader] != 0) {
+		Serial.print("reader: "); Serial.print(reader); Serial.println(" free.");
+		RFM_carduid[reader] = 0;
+		RFM_Output(reader, false);
+	}
+}
+void RFM_shift() {
+	for (byte i = 0; i < 8; i++) { //p7=bit0~p15=bit7
+		PORTD &= ~(1 << 5);
+		if (RFM_shiftbyte & (1 << i))PORTD |= (1 << 5);  //set serial data
+		PIND |= (1 << 6); PIND |= (1 << 6); //make shift puls
+	}
+	PIND |= (1 << 7); PIND |= (1 << 7); //make latch puls
+}
+void RFM_Output(byte poort, boolean onoff) { //poort 0~3
+	if (poort < 4) {
+		if (onoff) {
+			RFM_shiftbyte |= (1 << poort);
 		}
 		else {
-			stopcount[cardcount] ++;
+			RFM_shiftbyte &= ~(1 << poort);
 		}
 	}
-	//waar is dit voor? Eens uitzoeken
-	//reader.PICC_HaltA();// Halt PICC			
-	//reader.PCD_StopCrypto1();// Stop encryption on PCD	
-//}
-	if (GPIOR0 & (1 << 1)) {
-		Serial.println("show");
-		FastLED.show();
-		GPIOR0 &= ~(1 << 1);
-	}
-	if (solved == 0x0F) {
-		//puzzel opgelost, deuropenen
-		PORTD &= ~((1 << 5));
-	}
-	else {
-		PORTD |= (1 << 5);
-	}
 }
-void setcolor(byte pos, byte color) {
-	byte start[4];
-	byte rd; byte gr; byte bl;
-	switch (color) {
-	case 0: //groen
-		rd = 0x00; gr = 0xFF; bl = 0x00;
-		break;
-	case 1: //paars 0x9400D3
-		rd = 0x94; gr = 0x00; bl = 0xD3;
-		break;
-	case 2: //oranje 0xFF4500
-		rd = 0xFF; gr = 0x45; bl = 0x00;
-		break;
-	case 3: //blauw
-		rd = 0x00; gr = 0x00; bl = 0xFF;
-		break;
-	case 4: //zwart, uit
-		rd = 0x00; gr = 0x00; bl = 0x00;
-		break;
-	}
-
-	switch (pos) {
-	case 0:
-		start[0] = 12;
-		start[1] = 16;
-		start[2] = 20;
-		start[3] = 60;
-
-		break;
-	case 1:
-		start[0] = 8;
-		start[1] = 56;
-		start[2] = 24;
-		start[3] = 52;
-		break;
-	case 2:
-		start[0] = 4;
-		start[1] = 48;
-		start[2] = 28;
-		start[3] = 44;
-		break;
-	case 3:
-		start[0] = 0;
-		start[1] = 40;
-		start[2] = 32;
-		start[3] = 36;
-		break;
-	}
-	for (byte i = 0; i < 4; i++) { //3x start
-		for (byte p = (0 + start[i]); p < (4 + start[i]); p++) {
-			pix[p].r = rd; pix[p].g = gr; pix[p].b = bl;
+void RFM_SW_exe() {
+	byte changed; byte ss;
+	ss = PINC;
+	ss = ss << 4;
+	ss = ss >> 4;
+	changed = ss ^ RFM_switchstatus;
+	if (changed > 0) {
+		for (byte i = 0; i < 4; i++) {
+			if (changed & (1 << i)) {
+				if (ss & (1 << i)) { //switch released
+					RFM_SW_off(i);
+				}
+				else { //switch pushed
+					RFM_SW_on(i);
+				}
+			}
 		}
 
 	}
-	fl;
+	RFM_switchstatus = ss;
 }
+void RFM_SW_on(byte sw) {
+	Serial.print("switch aan: "); Serial.println(sw);
+}
+void RFM_SW_off(byte sw) {
+	Serial.print("switch uit: "); Serial.println(sw);
+}
+
 void loop() {
-	if (millis() - tijd > 20) { //timer 20ms
-		tijd = millis();
-		RFID_read();
-	}
+	RFM_slowcount++;
+	if (RFM_slowcount == 0)RFM_read();
+	RFM_SW_exe();
+	//if (millis() - tijd > 10) { //timer 20ms
+	//	tijd = millis();
+	//	RFID_read();
+	//}
 }
 

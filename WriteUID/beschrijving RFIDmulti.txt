@@ -1,0 +1,14 @@
+RFIDmulti is een algemene RFID reader toepassing.
+Gebaseerd op de populaire reader RFID-RC522
+Maximaal zijn 4 readers gelijktijdig uit te lezen
+Programma is algemeen en neutraal. 
+Werking is niet echt multiplexing, lezen van een card duurt ongeveer 30ms, 
+tijdens dit lezen worden geen instructies uitgevoerd, dus alleen bruikbaar voor latching toepassingen
+Wel kunnen in de 'pauzes' van het lezen diverse zaken worden afgehandeld. Voor meerdere readers en/of 
+Snellere continue processen gebruik maken van een master-slave set-up met meerder mcu.
+
+ID, card id teruggebracht tot een integer.
+Is de som van de eerste 4 bytes van id plus de xor van de eerste 4 id bytes.
+
+GPIOR0
+bit0=programmode true is aan
