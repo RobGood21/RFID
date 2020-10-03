@@ -22,6 +22,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Dices", "..\Dices\Dices.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FastLED-master-3.1.6", "Libraries\FastLED-master\3.1.6\FastLED-master\FastLED-master-3.1.6.vcxitems", "{FA0536D9-34FA-4A2B-9D99-1D081BF5360D}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RFIDmulti", "RFIDmulti\RFIDmulti.vcxproj", "{B474E508-5FB4-430F-8AFB-C7A41A01B100}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Libraries\FastLED-master\3.1.6\FastLED-master\FastLED-master-3.1.6.vcxitems*{b1f2dad2-285b-47e2-b219-646ef3f28df2}*SharedItemsImports = 4
@@ -56,6 +58,10 @@ Global
 		{B1F2DAD2-285B-47E2-B219-646EF3F28DF2}.Debug|x86.Build.0 = Debug|Win32
 		{B1F2DAD2-285B-47E2-B219-646EF3F28DF2}.Release|x86.ActiveCfg = Release|Win32
 		{B1F2DAD2-285B-47E2-B219-646EF3F28DF2}.Release|x86.Build.0 = Release|Win32
+		{B474E508-5FB4-430F-8AFB-C7A41A01B100}.Debug|x86.ActiveCfg = Debug|Win32
+		{B474E508-5FB4-430F-8AFB-C7A41A01B100}.Debug|x86.Build.0 = Debug|Win32
+		{B474E508-5FB4-430F-8AFB-C7A41A01B100}.Release|x86.ActiveCfg = Release|Win32
+		{B474E508-5FB4-430F-8AFB-C7A41A01B100}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
