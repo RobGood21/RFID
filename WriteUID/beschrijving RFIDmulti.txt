@@ -12,3 +12,6 @@ Is de som van de eerste 4 bytes van id plus de xor van de eerste 4 id bytes.
 
 GPIOR0
 bit0=programmode true is aan
+
+Teksten voor CHESS
+
