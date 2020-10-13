@@ -12,9 +12,6 @@ Xtra hardware red led to PIN4 LP4 (RLP4 1Kohm)
 
 GPIOR0 bit 0 = program mode
 
-
-
-
 */
 #include <require_cpp11.h>
 #include <MFRC522Extended.h>
@@ -42,6 +39,7 @@ byte RFM_switchstatus;
 //for CHESS
 int CHESS_uid[4];
 byte CHESS_play;
+byte CHESS_solvedcount;
 
 
 void setup() {
@@ -100,9 +98,23 @@ void RFM_on(int uid, byte reader) {
 	}
 	if (CHESS_uid[reader] == uid) {
 		RFM_Output(reader, true);
+
 		CHESS_play |= (1 << reader);
 		CHESS_solved();
 	}
+	else {
+		RFM_Output(reader, false);
+		CHESS_play &= ~(1 << reader);
+	}
+
+	//check if uid is active on other reader
+	for (byte i = 0; i < 4; i++) {
+		if (reader != i) {
+			if (RFM_carduid[i] == uid) RFM_free(i);
+		}
+	}
+
+
 
 	Serial.print("Reader: "); Serial.print(reader); Serial.print(", UID= "); Serial.println(uid);
 }
@@ -175,21 +187,28 @@ void MEM_read() {
 }
 void CHESS_solved() {
 	if (CHESS_play == B00001111) { //puzzel opgelost
-		PORTB |= (1 << 0); //set PIN8
+		GPIOR0 |= (1 << 1);
+		CHESS_solvedcount++;
+		if (CHESS_solvedcount > 15) {
+			PORTB |= (1 << 0); //set PIN8
+			CHESS_solvedcount = 0;
+			GPIOR0 &= ~(1 << 1);
+		}
 	}
 	else {
 		//niet opgelost
 		PORTB &= ~(1 << 0); //clear pin 8
+		CHESS_solvedcount = 0;
+		GPIOR0 &= ~(1 << 1);
 	}
 }
 
 void loop() {
 	RFM_slowcount++;
-	if (RFM_slowcount == 0)RFM_read();
-	RFM_SW_exe();
-	//if (millis() - tijd > 10) { //timer 20ms
-	//	tijd = millis();
-	//	RFID_read();
-	//}
+	if (RFM_slowcount == 0) {
+		RFM_read();
+		RFM_SW_exe();
+		if(GPIOR0 & (1<<1))CHESS_solved();
+	}
 }
 
