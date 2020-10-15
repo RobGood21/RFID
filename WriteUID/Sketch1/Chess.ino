@@ -50,6 +50,7 @@ void setup() {
 	DDRD |= (B11110000 << 0); //pin7 RCLK; Pin6 SRCLK; Pin5,pin4 Serial pins as output
 	DDRB |= (1 << 0); //PIN8 output
 	RFM_switchstatus = 0xFF;
+	PORTB |= (1 << 0); //set PIN8 high
 	MEM_read();
 }
 
@@ -65,7 +66,6 @@ void RFM_read() {
 
 	reader.PCD_Init(10, 9); // Init each MFRC522 card (10 slave select, 9 reset wordt niet gebruikt)
 	if (reader.PICC_IsNewCardPresent() && reader.PICC_ReadCardSerial()) {
-		//PORTB |= (1 << 0); //light test led
 		for (byte i = 0; i < 4; i++) {
 			uid = uid + reader.uid.uidByte[i];
 			id = id ^ reader.uid.uidByte[i];
@@ -190,14 +190,14 @@ void CHESS_solved() {
 		GPIOR0 |= (1 << 1);
 		CHESS_solvedcount++;
 		if (CHESS_solvedcount > 15) {
-			PORTB |= (1 << 0); //set PIN8
+			PORTB &=~(1 << 0); //Clear PIN8
 			CHESS_solvedcount = 0;
 			GPIOR0 &= ~(1 << 1);
 		}
 	}
 	else {
 		//niet opgelost
-		PORTB &= ~(1 << 0); //clear pin 8
+		PORTB |= (1 << 0); //set pin 8
 		CHESS_solvedcount = 0;
 		GPIOR0 &= ~(1 << 1);
 	}
